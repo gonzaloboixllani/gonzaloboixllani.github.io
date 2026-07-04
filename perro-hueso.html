@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lánzale el hueso a Buddy 🐾</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(180deg, #87ceeb 0%, #b0e0e6 40%, #90c790 70%, #6ba85a 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #333;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  header {
+    text-align: center;
+    padding: 12px 15px 6px;
+    z-index: 20;
+    width: 100%;
+  }
+
+  h1 {
+    font-size: 1.9rem;
+    color: #fff;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+  }
+
+  .info-bar {
+    display: flex;
+    gap: 14px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .info-bar div {
+    background: rgba(255,255,255,0.88);
+    padding: 7px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .reiniciar-btn {
+    margin-top: 8px;
+    padding: 8px 22px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    background: #95a5a6;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .reiniciar-btn:hover { background: #7f8c8d; transform: translateY(-2px); }
+
+  #escenario {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+
+  /* Sol */
+  .sol {
+    position: absolute;
+    top: 20px; right: 40px;
+    width: 70px; height: 70px;
+    background: radial-gradient(circle, #fff5b0, #ffd700);
+    border-radius: 50%;
+    box-shadow: 0 0 40px #ffd700, 0 0 80px rgba(255,215,0,0.4);
+    animation: flotarSol 6s ease-in-out infinite;
+  }
+  @keyframes flotarSol {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Nubes */
+  .nube {
+    position: absolute;
+    background: #fff;
+    border-radius: 50px;
+    opacity: 0.9;
+    animation: moverNube linear infinite;
+  }
+  .nube::before, .nube::after { content: ''; position: absolute; background: #fff; border-radius: 50%; }
+  .nube1 { width: 100px; height: 35px; top: 60px; left: -120px; animation-duration: 30s; }
+  .nube1::before { width: 50px; height: 50px; top: -22px; left: 18px; }
+  .nube1::after  { width: 40px; height: 40px; top: -16px; left: 55px; }
+  .nube2 { width: 80px; height: 28px; top: 110px; left: -100px; animation-duration: 45s; animation-delay: -10s; }
+  .nube2::before { width: 40px; height: 40px; top: -18px; left: 12px; }
+  .nube2::after  { width: 32px; height: 32px; top: -12px; left: 42px; }
+  @keyframes moverNube {
+    from { transform: translateX(0); }
+    to   { transform: translateX(calc(100vw + 150px)); }
+  }
+
+  /* Suelo */
+  .suelo {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 80px;
+    background: linear-gradient(180deg, #6ba85a, #4d7d3d);
+    border-top: 4px solid #5a9444;
+  }
+
+  /* Persona (jugador) */
+  .persona {
+    position: absolute;
+    bottom: 75px; left: 60px;
+    width: 70px; height: 120px;
+    z-index: 5;
+  }
+  .persona .cabeza {
+    width: 35px; height: 35px;
+    background: #f0c896; border-radius: 50%;
+    margin: 0 auto; position: relative;
+  }
+  .persona .cabeza::before {
+    content: ''; position: absolute; top: 14px; left: 5px;
+    width: 5px; height: 5px; background: #333; border-radius: 50%;
+    box-shadow: 20px 0 0 #333;
+  }
+  .persona .cuerpo {
+    width: 45px; height: 55px;
+    background: #3498db;
+    margin: 2px auto 0;
+    border-radius: 8px 8px 5px 5px;
+    position: relative;
+  }
+  .persona .brazo {
+    position: absolute; bottom: 20px; right: -8px;
+    width: 12px; height: 40px;
+    background: #f0c896; border-radius: 6px;
+    transform-origin: top center;
+    transform: rotate(-20deg);
+    transition: transform 0.15s;
+  }
+  .persona.lanzando .brazo { transform: rotate(-130deg); }
+  .persona .pierna {
+    position: absolute; bottom: 0;
+    width: 14px; height: 30px;
+    background: #2c3e50; border-radius: 4px;
+  }
+  .persona .pierna.izq { left: 16px; }
+  .persona .pierna.der { right: 16px; }
+
+  /* Hueso */
+  .hueso {
+    position: absolute;
+    width: 36px; height: 18px;
+    z-index: 6;
+    display: none;
+    pointer-events: none;
+  }
+  .hueso .centro {
+    position: absolute; left: 8px; top: 5px;
+    width: 20px; height: 8px;
+    background: #f5f0e0; border-radius: 2px;
+  }
+  .hueso .extremo {
+    position: absolute; width: 10px; height: 16px;
+    background: #f5f0e0; border-radius: 50%; top: 1px;
+  }
+  .hueso .extremo.izq { left: 0; }
+  .hueso .extremo.der { right: 0; }
+  .hueso .extremo.izq::after, .hueso .extremo.der::after,
+  .hueso .extremo.izq::before, .hueso .extremo.der::before {
+    content: ''; position: absolute;
+    width: 6px; height: 6px; background: #f5f0e0; border-radius: 50%;
+  }
+  .hueso .extremo.izq::after, .hueso .extremo.der::after { top: -2px; left: 2px; }
+  .hueso .extremo.izq::before, .hueso .extremo.der::before { bottom: -2px; left: 2px; }
+
+  /* ====== BUDDY: perro de agua negro con corbatita blanca ====== */
+  .perro {
+    position: absolute;
+    bottom: 78px;
+    left: 100px;
+    width: 90px;
+    height: 70px;
+    z-index: 5;
+    transition: left 0.05s linear;
+  }
+
+  /* El perro puede mirar a izquierda o derecha.
+     El sprite base mira a la derecha (cabeza a la derecha). */
+  .perro-wrap {
+    position: absolute;
+    inset: 0;
+    transform-origin: center center;
+    transition: transform 0.18s ease;
+  }
+  .perro.mira-izq .perro-wrap { transform: scaleX(-1); }
+
+  /* Placa con el nombre "Buddy" (NO se voltea, queda legible) */
+  .perro .placa {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    color: #2c3e50;
+    font-size: 0.72rem;
+    font-weight: bold;
+    padding: 2px 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+    white-space: nowrap;
+    z-index: 6;
+  }
+  .perro .placa::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 8px; height: 8px;
+    background: #fff;
+  }
+
+  .curls {
+    background-color: #1c1c1c;
+    background-image:
+      radial-gradient(circle at 25% 35%, #333 1.4px, transparent 2.2px),
+      radial-gradient(circle at 70% 60%, #333 1.4px, transparent 2.2px),
+      radial-gradient(circle at 50% 80%, #2a2a2a 1.2px, transparent 2px);
+    background-size: 10px 10px, 12px 12px, 9px 9px;
+  }
+
+  .perro .cuerpo {
+    position: absolute;
+    bottom: 12px; left: 12px;
+    width: 62px; height: 36px;
+    border-radius: 18px 24px 14px 14px;
+    z-index: 2;
+  }
+
+  .perro .cabeza {
+    position: absolute;
+    bottom: 20px; right: 0;
+    width: 34px; height: 32px;
+    border-radius: 55% 60% 45% 45%;
+    z-index: 3;
+  }
+
+  .perro .hocico {
+    position: absolute;
+    bottom: 21px; right: -6px;
+    width: 18px; height: 16px;
+    background-color: #1c1c1c;
+    background-image: radial-gradient(circle at 40% 40%, #333 1.2px, transparent 2px);
+    background-size: 8px 8px;
+    border-radius: 50%;
+    z-index: 4;
+  }
+  .perro .nariz {
+    position: absolute;
+    bottom: 30px; right: -3px;
+    width: 7px; height: 6px;
+    background: #000; border-radius: 50%;
+    z-index: 5;
+    box-shadow: 0 0 0 1px #2a2a2a;
+  }
+
+  .perro .oreja {
+    position: absolute;
+    bottom: 22px;
+    width: 14px; height: 22px;
+    border-radius: 50% 50% 40% 40%;
+    z-index: 2;
+  }
+  .perro .oreja.sup { right: 22px; transform: rotate(10deg); }
+  .perro .oreja.inf { right: 12px; transform: rotate(28deg); bottom: 18px; }
+
+  .perro .ojo {
+    position: absolute;
+    bottom: 38px; right: 10px;
+    width: 5px; height: 5px;
+    background: #f5f0e0; border-radius: 50%;
+    z-index: 5;
+    box-shadow: 0 0 0 1px #000 inset;
+  }
+  .perro .ojo::after {
+    content: ''; position: absolute; top: 1px; left: 1px;
+    width: 2px; height: 2px; background: #000; border-radius: 50%;
+  }
+
+  .perro .corbata {
+    position: absolute;
+    bottom: 30px; right: 24px;
+    width: 22px; height: 12px;
+    z-index: 4;
+  }
+  .perro .corbata .lazo-izq,
+  .perro .corbata .lazo-der {
+    position: absolute;
+    width: 10px; height: 12px;
+    background: #fff; top: 0;
+  }
+  .perro .corbata .lazo-izq { left: 0; clip-path: polygon(100% 0, 100% 100%, 0 50%); }
+  .perro .corbata .lazo-der { right: 0; clip-path: polygon(0 0, 0 100%, 100% 50%); }
+  .perro .corbata .nudo {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px; height: 8px;
+    background: #fff; border-radius: 2px;
+    z-index: 2;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+  }
+
+  .perro .cola {
+    position: absolute;
+    bottom: 30px; left: 0;
+    width: 16px; height: 10px;
+    border-radius: 50%;
+    transform-origin: right center;
+    transform: rotate(-15deg);
+    animation: moverCola 0.4s ease-in-out infinite;
+    z-index: 1;
+  }
+  @keyframes moverCola {
+    0%, 100% { transform: rotate(-15deg); }
+    50% { transform: rotate(-50deg); }
+  }
+
+  .perro .pata {
+    position: absolute;
+    bottom: 0;
+    width: 9px; height: 16px;
+    background-color: #161616;
+    background-image: radial-gradient(circle at 40% 40%, #2e2e2e 1px, transparent 1.6px);
+    background-size: 6px 6px;
+    border-radius: 5px;
+  }
+  .perro .pata.del-del { right: 10px; }
+  .perro .pata.del-atr { right: 20px; }
+  .perro .pata.atr-del { left: 24px; }
+  .perro .pata.atr-atr { left: 14px; }
+
+  .perro.correr .pata.del-del { animation: pata1 0.3s linear infinite; }
+  .perro.correr .pata.del-atr { animation: pata2 0.3s linear infinite; }
+  .perro.correr .pata.atr-del { animation: pata2 0.3s linear infinite; }
+  .perro.correr .pata.atr-atr { animation: pata1 0.3s linear infinite; }
+  @keyframes pata1 {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-6px) rotate(15deg); }
+  }
+  @keyframes pata2 {
+    0%, 100% { transform: translateY(-6px) rotate(15deg); }
+    50% { transform: translateY(0) rotate(0deg); }
+  }
+
+  /* Hueso en la boca */
+  .perro .hueso-boca {
+    position: absolute;
+    right: -18px; top: 24px;
+    width: 22px; height: 11px;
+    display: none;
+    z-index: 5;
+  }
+  .perro .hueso-boca .centro {
+    position: absolute; left: 5px; top: 3px;
+    width: 12px; height: 5px; background: #f5f0e0; border-radius: 2px;
+  }
+  .perro .hueso-boca .extremo {
+    position: absolute; width: 6px; height: 9px;
+    background: #f5f0e0; border-radius: 50%; top: 1px;
+  }
+  .perro .hueso-boca .extremo.izq { left: 0; }
+  .perro .hueso-boca .extremo.der { right: 0; }
+  .perro.llevando .hueso-boca { display: block; }
+
+  .perro.feliz { animation: saltar 0.5s ease-in-out infinite; }
+  @keyframes saltar {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  }
+
+  /* Buddy confundido (lanzamiento flojo) */
+  .perro.confuso .perro-wrap { transform: rotate(-12deg); }
+  .perro.confuso.mira-izq .perro-wrap { transform: scaleX(-1) rotate(-12deg); }
+  .perro.confuso .ojo::after { animation: parpadeo 0.8s infinite; }
+  @keyframes parpadeo {
+    0%, 80%, 100% { opacity: 1; }
+    40% { opacity: 0.2; }
+  }
+
+  /* Burbuja de pensamiento "?" */
+  .burbuja {
+    position: absolute;
+    top: -42px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    color: #2c3e50;
+    font-size: 0.95rem;
+    font-weight: bold;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    z-index: 7;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .burbuja::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 8px; height: 8px;
+    background: #fff;
+  }
+  .burbuja.visible { opacity: 1; }
+
+  /* Vista previa de la trayectoria */
+  .trayectoria-punto {
+    position: absolute;
+    width: 7px; height: 7px;
+    background: rgba(255,255,255,0.7);
+    border: 1.5px solid #e67e22;
+    border-radius: 50%;
+    z-index: 4;
+    pointer-events: none;
+    transform: translate(-50%, 50%);
+  }
+
+  /* Indicador de aim (flecha desde la mano) */
+  .aim-flecha {
+    position: absolute;
+    height: 4px;
+    background: rgba(230, 126, 34, 0.85);
+    border-radius: 3px;
+    transform-origin: left center;
+    z-index: 5;
+    pointer-events: none;
+    display: none;
+  }
+
+  .mensaje {
+    position: absolute;
+    top: 45%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: rgba(255,255,255,0.95);
+    padding: 14px 30px;
+    border-radius: 20px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #2c3e50;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    z-index: 100;
+    opacity: 0;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+  .mensaje.mostrar { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+
+  .pista {
+    position: absolute;
+    bottom: 12px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.82rem;
+    color: #fff;
+    background: rgba(0,0,0,0.35);
+    padding: 6px 18px;
+    border-radius: 15px;
+    white-space: nowrap;
+    z-index: 10;
+  }
+
+  .hud {
+    position: absolute;
+    top: 12px; left: 12px;
+    background: rgba(0,0,0,0.4);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: bold;
+    z-index: 10;
+    display: none;
+    line-height: 1.4;
+  }
+  .hud.visible { display: block; }
+</style>
+</head>
+<body>
+
+  <header>
+    <h1>🐾 Lánzale el hueso a Buddy</h1>
+    <div class="info-bar">
+      <div>🏆 Veces que Buddy te lo trajo: <span id="contador">0</span></div>
+      <div>🦴 Huesos lanzados: <span id="lanzados">0</span></div>
+      <div>🔥 Racha: <span id="racha">0</span></div>
+    </div>
+    <button class="reiniciar-btn" onclick="reiniciar()">🔄 Reiniciar</button>
+  </header>
+
+  <div id="escenario">
+    <div class="sol"></div>
+    <div class="nube nube1"></div>
+    <div class="nube nube2"></div>
+
+    <div class="hud" id="hud"></div>
+
+    <div class="persona" id="persona">
+      <div class="cabeza"></div>
+      <div class="cuerpo"></div>
+      <div class="brazo" id="brazo"></div>
+      <div class="pierna izq"></div>
+      <div class="pierna der"></div>
+    </div>
+
+    <div class="perro" id="perro">
+      <div class="placa">🐶 Buddy</div>
+      <div class="burbuja" id="burbuja">❓</div>
+      <div class="perro-wrap" id="perroWrap">
+        <div class="cola curls"></div>
+        <div class="cuerpo curls"></div>
+        <div class="pata del-del"></div>
+        <div class="pata del-atr"></div>
+        <div class="pata atr-del"></div>
+        <div class="pata atr-atr"></div>
+        <div class="oreja sup curls"></div>
+        <div class="oreja inf curls"></div>
+        <div class="corbata">
+          <div class="lazo-izq"></div>
+          <div class="lazo-der"></div>
+          <div class="nudo"></div>
+        </div>
+        <div class="cabeza curls"></div>
+        <div class="hocico"></div>
+        <div class="nariz"></div>
+        <div class="ojo"></div>
+        <div class="hueso-boca" id="huesoBoca">
+          <div class="extremo izq"></div>
+          <div class="centro"></div>
+          <div class="extremo der"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="aim-flecha" id="aimFlecha"></div>
+
+    <div class="hueso" id="hueso">
+      <div class="extremo izq"></div>
+      <div class="centro"></div>
+      <div class="extremo der"></div>
+    </div>
+
+    <div class="mensaje" id="mensaje"></div>
+
+    <div class="suelo"></div>
+    <div class="pista">Mantén pulsado y <b>arrastra en la dirección</b> donde quieras lanzar el hueso. Cuanto más largo el arrastre, más fuerza. Suelta para lanzar 🦴</div>
+  </div>
+
+<script>
+  const escenario = document.getElementById('escenario');
+  const perro = document.getElementById('perro');
+  const hueso = document.getElementById('hueso');
+  const persona = document.getElementById('persona');
+  const mensaje = document.getElementById('mensaje');
+  const contadorEl = document.getElementById('contador');
+  const lanzadosEl = document.getElementById('lanzados');
+  const hud = document.getElementById('hud');
+  const aimFlecha = document.getElementById('aimFlecha');
+
+  // Constantes físicas (coordenadas con y hacia arriba, origen en esquina inferior-izquierda del escenario)
+  const GROUND_Y = 80;       // altura del suelo (donde reposa el hueso)
+  const LAUNCH_X = 95;       // posición de la "mano" de la persona
+  const LAUNCH_Y = 155;
+  const GRAVITY = 1400;      // px/s²
+  const VELOCITY_SCALE = 4.0;// drag (px) -> velocidad (px/s)
+  const MIN_DRAG = 25;       // arrastre mínimo para lanzar
+  const MAX_DRAG = 240;      // arrastre máximo
+  const UMBRAL_FLOJO = 130;  // si el hueso cae a menos de estos px, es lanzamiento flojo
+
+  let contador = 0;
+  let lanzados = 0;
+  let racha = 0;
+  let perroX = 100;
+  let estado = 'idle';
+  let animando = false;
+
+  let aiming = false;
+  let dragStartX = 0, dragStartY = 0; // punto donde se pulsó (coords y-up)
+  let dragX = 0, dragY = 0;           // vector de arrastre (actual - inicio)
+  let puntosTrayectoria = [];
+
+  // ---------- Hueso ----------
+  function posicionarHuesoEnMano() {
+    hueso.style.display = 'block';
+    hueso.style.left = LAUNCH_X + 'px';
+    hueso.style.bottom = LAUNCH_Y + 'px';
+    hueso.style.transform = 'rotate(30deg)';
+  }
+  posicionarHuesoEnMano();
+
+  // ---------- Coordenadas ----------
+  function mouseAEscenario(e) {
+    const rect = escenario.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = rect.height - (e.clientY - rect.top); // y hacia arriba
+    return { mx, my, rect };
+  }
+
+  // Velocidad inicial a partir del arrastre (arrastre DIRECTO:
+  // arrastras en la dirección donde quieres lanzar el hueso)
+  function velocidadDesdeDrag(dx, dy) {
+    const len = Math.hypot(dx, dy);
+    const clamped = Math.min(Math.max(len, 0), MAX_DRAG);
+    const scale = VELOCITY_SCALE;
+    return {
+      vx: dx * scale,
+      vy: dy * scale,
+      fuerza: clamped,
+      dragLen: len
+    };
+  }
+
+  // Simula la trayectoria y devuelve puntos (x,y) en coords y-up hasta tocar el suelo
+  function calcularTrayectoria(vx, vy) {
+    const puntos = [];
+    const dt = 0.025;
+    let t = 0;
+    let x = LAUNCH_X, y = LAUNCH_Y;
+    let safety = 0;
+    while (y > GROUND_Y && safety < 400) {
+      puntos.push({ x, y });
+      t += dt;
+      x = LAUNCH_X + vx * t;
+      y = LAUNCH_Y + vy * t - 0.5 * GRAVITY * t * t;
+      safety++;
+    }
+    // Asegurar el punto de caída
+    puntos.push({ x: Math.max(LAUNCH_X, x), y: GROUND_Y });
+    return puntos;
+  }
+
+  function actualizarVistaPrevia() {
+    limpiarVistaPrevia();
+    if (!aiming) return;
+
+    const { vx, vy, dragLen } = velocidadDesdeDrag(dragX, dragY);
+    if (dragLen < MIN_DRAG) {
+      aimFlecha.style.display = 'none';
+      hud.classList.remove('visible');
+      return;
+    }
+
+    // Flecha de aim desde la mano (señala dirección de lanzamiento, opuesta al arrastre)
+    const ang = Math.atan2(vy, vx); // y-up
+    const lenPx = Math.min(dragLen, MAX_DRAG);
+    // Convertir a pantalla (y-down) para CSS
+    aimFlecha.style.display = 'block';
+    aimFlecha.style.left = LAUNCH_X + 'px';
+    aimFlecha.style.bottom = LAUNCH_Y + 'px';
+    // En pantalla, el ángulo se invierte en Y: screenAngle = -ang
+    const screenAngle = -ang * 180 / Math.PI;
+    aimFlecha.style.width = (lenPx * 0.6) + 'px';
+    aimFlecha.style.transform = `rotate(${screenAngle}deg)`;
+
+    // Puntos de la trayectoria
+    const puntos = calcularTrayectoria(vx, vy);
+    const paso = Math.max(1, Math.floor(puntos.length / 16));
+    for (let i = 1; i < puntos.length; i += paso) {
+      const p = puntos[i];
+      const dot = document.createElement('div');
+      dot.className = 'trayectoria-punto';
+      dot.style.left = p.x + 'px';
+      dot.style.bottom = p.y + 'px';
+      escenario.appendChild(dot);
+      puntosTrayectoria.push(dot);
+    }
+
+    // HUD informativo
+    const fuerza = Math.round((Math.min(dragLen, MAX_DRAG) / MAX_DRAG) * 100);
+    const anguloDeg = Math.round(ang * 180 / Math.PI);
+    hud.classList.add('visible');
+    hud.innerHTML = `💪 Fuerza: ${fuerza}%<br>📐 Ángulo: ${anguloDeg}°`;
+  }
+
+  function limpiarVistaPrevia() {
+    puntosTrayectoria.forEach(p => p.remove());
+    puntosTrayectoria = [];
+    aimFlecha.style.display = 'none';
+  }
+
+  // ---------- Eventos de ratón ----------
+  escenario.addEventListener('mousedown', (e) => {
+    if (animando || estado !== 'idle') return;
+    aiming = true;
+    const { mx, my } = mouseAEscenario(e);
+    dragStartX = mx;
+    dragStartY = my;
+    dragX = 0;
+    dragY = 0;
+    actualizarVistaPrevia();
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!aiming) return;
+    const { mx, my } = mouseAEscenario(e);
+    dragX = mx - dragStartX;
+    dragY = my - dragStartY;
+    actualizarVistaPrevia();
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (!aiming) return;
+    aiming = false;
+    const { vx, vy, dragLen } = velocidadDesdeDrag(dragX, dragY);
+    limpiarVistaPrevia();
+    hud.classList.remove('visible');
+
+    if (dragLen < MIN_DRAG) {
+      // arrastre demasiado corto: no lanzar
+      return;
+    }
+    lanzarHueso(vx, vy);
+  });
+
+  // Soporte táctil básico
+  escenario.addEventListener('touchstart', (e) => {
+    if (animando || estado !== 'idle') return;
+    const t = e.touches[0];
+    aiming = true;
+    const { mx, my } = mouseAEscenario({ clientX: t.clientX, clientY: t.clientY });
+    dragStartX = mx;
+    dragStartY = my;
+    dragX = 0;
+    dragY = 0;
+    actualizarVistaPrevia();
+    e.preventDefault();
+  }, { passive: false });
+  window.addEventListener('touchmove', (e) => {
+    if (!aiming) return;
+    const t = e.touches[0];
+    const { mx, my } = mouseAEscenario({ clientX: t.clientX, clientY: t.clientY });
+    dragX = mx - dragStartX;
+    dragY = my - dragStartY;
+    actualizarVistaPrevia();
+    e.preventDefault();
+  }, { passive: false });
+  window.addEventListener('touchend', () => {
+    if (!aiming) return;
+    aiming = false;
+    const { vx, vy, dragLen } = velocidadDesdeDrag(dragX, dragY);
+    limpiarVistaPrevia();
+    hud.classList.remove('visible');
+    if (dragLen < MIN_DRAG) return;
+    lanzarHueso(vx, vy);
+  });
+
+  // ---------- Lanzamiento con física real ----------
+  function lanzarHueso(vx, vy) {
+    animando = true;
+    estado = 'lanzando';
+    lanzados++;
+    lanzadosEl.textContent = lanzados;
+
+    persona.classList.add('lanzando');
+
+    let t = 0;
+    let last = performance.now();
+    let landX = LAUNCH_X;
+
+    function frame(now) {
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      t += dt;
+      const x = LAUNCH_X + vx * t;
+      const y = LAUNCH_Y + vy * t - 0.5 * GRAVITY * t * t;
+      const rot = 30 + t * 720;
+
+      hueso.style.left = x + 'px';
+      hueso.style.bottom = Math.max(y, GROUND_Y) + 'px';
+      hueso.style.transform = `rotate(${rot}deg)`;
+
+      if (y > GROUND_Y) {
+        requestAnimationFrame(frame);
+      } else {
+        landX = x;
+        hueso.style.bottom = GROUND_Y + 'px';
+        hueso.style.transform = 'rotate(20deg)';
+        persona.classList.remove('lanzando');
+        irABuscarHueso(landX);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- Buddy ----------
+  function mirar(direccion) {
+    // 'der' o 'izq'
+    if (direccion === 'izq') perro.classList.add('mira-izq');
+    else perro.classList.remove('mira-izq');
+  }
+
+  function irABuscarHueso(destinoX) {
+    estado = 'buscando';
+    perro.classList.add('correr');
+    mirar('der'); // va hacia la derecha, hacia el hueso
+
+    // ¿Lanzamiento flojo? Buddy se confunde
+    const distanciaLanzada = destinoX - LAUNCH_X;
+    const esFlojo = distanciaLanzada < UMBRAL_FLOJO;
+
+    if (esFlojo) {
+      mostrarBurbuja();
+      perro.classList.add('confuso');
+      mostrarMensaje('🤔 ¿Eh? ¡Casi no ha volado el hueso!');
+      racha = 0;
+      rachaEl.textContent = racha;
+      setTimeout(() => {
+        ocultarBurbuja();
+        perro.classList.remove('confuso');
+        mostrarMensaje('😤 Bueno... voy a buscarlo...');
+        irABuscarHuesoPaso2(destinoX, esFlojo);
+      }, 1300);
+      return;
+    }
+
+    mostrarMensaje('🏃 ¡Vamos, Buddy! ¡A buscarlo!');
+    irABuscarHuesoPaso2(destinoX, esFlojo);
+  }
+
+  function irABuscarHuesoPaso2(destinoX, esFlojo) {
+    // limitar dentro del escenario
+    const ancho = escenario.clientWidth;
+    const destino = Math.min(Math.max(destinoX - 40, perroX + 20), ancho - 60);
+
+    const inicio = perroX;
+    const fin = destino;
+    const distancia = Math.abs(fin - inicio);
+    const velocidad = 380;
+    const duracion = (distancia / velocidad) * 1000;
+    const startTime = performance.now();
+
+    function mover(now) {
+      const t = Math.min((now - startTime) / duracion, 1);
+      perroX = inicio + (fin - inicio) * t;
+      perro.style.left = perroX + 'px';
+      if (t < 1) requestAnimationFrame(mover);
+      else {
+        perro.classList.remove('correr');
+        cogerHueso(esFlojo);
+      }
+    }
+    requestAnimationFrame(mover);
+  }
+
+  function cogerHueso(esFlojo) {
+    mostrarMensaje(esFlojo ? '🦴 Toma... aquí tienes tu hueso...' : '🦴 ¡Lo tengo, amo!');
+    hueso.style.display = 'none';
+    perro.classList.add('llevando');
+    setTimeout(() => volverConHueso(esFlojo), 600);
+  }
+
+  function volverConHueso(esFlojo) {
+    estado = 'volviendo';
+    perro.classList.add('correr');
+    mirar('izq'); // vuelve mirando a la izquierda, hacia el amo (jugador)
+    if (!esFlojo) mostrarMensaje('🐕 ¡Te lo traigo, amo!');
+
+    const inicio = perroX;
+    const fin = 100;
+    const distancia = Math.abs(fin - inicio);
+    const velocidad = 380;
+    const duracion = (distancia / velocidad) * 1000;
+    const startTime = performance.now();
+
+    function mover(now) {
+      const t = Math.min((now - startTime) / duracion, 1);
+      perroX = inicio + (fin - inicio) * t;
+      perro.style.left = perroX + 'px';
+      if (t < 1) requestAnimationFrame(mover);
+      else {
+        perro.classList.remove('correr');
+        entregarHueso(esFlojo);
+      }
+    }
+    requestAnimationFrame(mover);
+  }
+
+  function entregarHueso(esFlojo) {
+    estado = 'feliz';
+    perro.classList.remove('llevando');
+    perro.classList.add('feliz');
+    mirar('izq'); // sigue mirando al amo, contento
+    contador++;
+    contadorEl.textContent = contador;
+
+    if (esFlojo) {
+      racha = 0;
+      rachaEl.textContent = racha;
+      mostrarMensaje('😬 ¿No podrías lanzarlo más lejos...?');
+    } else {
+      racha++;
+      rachaEl.textContent = racha;
+      const mensajes = [
+        '🎉 ¡Buen chico, Buddy! ¡Una caricia!',
+        '😊 ¡Buddy lo ha hecho genial!',
+        '🐾 ¡Buddy es el mejor perro del mundo!',
+        '❤️ ¡Buen chico! ¡Toma tu premio, Buddy!'
+      ];
+      let extra = racha >= 3 ? `  🔥 ¡Racha de ${racha}!` : '';
+      mostrarMensaje(mensajes[Math.floor(Math.random() * mensajes.length)] + extra);
+    }
+
+    setTimeout(() => {
+      perro.classList.remove('feliz', 'confuso');
+      ocultarBurbuja();
+      mirar('der'); // vuelve a mirar al campo para el siguiente lanzamiento
+      ocultarMensaje();
+      posicionarHuesoEnMano();
+      estado = 'idle';
+      animando = false;
+    }, 1800);
+  }
+
+  function mostrarBurbuja() {
+    document.getElementById('burbuja').classList.add('visible');
+  }
+  function ocultarBurbuja() {
+    document.getElementById('burbuja').classList.remove('visible');
+  }
+
+  function mostrarMensaje(texto) {
+    mensaje.textContent = texto;
+    mensaje.classList.add('mostrar');
+  }
+  function ocultarMensaje() {
+    mensaje.classList.remove('mostrar');
+  }
+
+  const rachaEl = document.getElementById('racha');
+
+  function reiniciar() {
+    if (animando) return;
+    contador = 0;
+    lanzados = 0;
+    racha = 0;
+    contadorEl.textContent = 0;
+    lanzadosEl.textContent = 0;
+    rachaEl.textContent = 0;
+    perroX = 100;
+    perro.style.left = '100px';
+    perro.classList.remove('correr', 'llevando', 'feliz', 'confuso', 'mira-izq');
+    ocultarBurbuja();
+    hueso.style.display = 'none';
+    posicionarHuesoEnMano();
+    ocultarMensaje();
+    estado = 'idle';
+    limpiarVistaPrevia();
+    hud.classList.remove('visible');
+  }
+</script>
+
+</body>
+</html>

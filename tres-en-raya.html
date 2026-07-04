@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tres en Raya</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #eee;
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+  }
+
+  .turno {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    padding: 10px 25px;
+    border-radius: 30px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .tablero {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    gap: 8px;
+    background: rgba(255,255,255,0.1);
+    padding: 10px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .casilla {
+    background: #0f3460;
+    border: none;
+    border-radius: 10px;
+    font-size: 3rem;
+    font-weight: bold;
+    color: #eee;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .casilla:hover:not(:disabled) {
+    background: #1a4a7e;
+    transform: scale(1.03);
+  }
+
+  .casilla:disabled {
+    cursor: default;
+  }
+
+  .casilla.X { color: #e94560; }
+  .casilla.O { color: #00d2ff; }
+
+  .casilla.ganadora {
+    background: #2ecc71;
+    animation: pulso 0.6s infinite alternate;
+  }
+
+  @keyframes pulso {
+    from { transform: scale(1); }
+    to { transform: scale(1.08); }
+  }
+
+  .info {
+    margin-top: 25px;
+    text-align: center;
+  }
+
+  .resultado {
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    min-height: 1.4rem;
+  }
+
+  button.reiniciar {
+    padding: 12px 35px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 30px;
+    background: #e94560;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(233, 69, 90, 0.4);
+  }
+
+  button.reiniciar:hover {
+    background: #c73852;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(233, 69, 90, 0.5);
+  }
+
+  .marcador {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+    font-size: 1rem;
+  }
+
+  .marcador div {
+    padding: 8px 20px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .marcador .X { color: #e94560; }
+  .marcador .O { color: #00d2ff; }
+
+  @media (max-width: 400px) {
+    .tablero {
+      grid-template-columns: repeat(3, 80px);
+      grid-template-rows: repeat(3, 80px);
+    }
+    .casilla { font-size: 2.5rem; }
+    h1 { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+  <h1>⭕ Tres en Raya ❌</h1>
+  <div class="turno" id="turno">Turno de: <span id="jugador">X</span></div>
+
+  <div class="tablero" id="tablero">
+    <button class="casilla" data-index="0"></button>
+    <button class="casilla" data-index="1"></button>
+    <button class="casilla" data-index="2"></button>
+    <button class="casilla" data-index="3"></button>
+    <button class="casilla" data-index="4"></button>
+    <button class="casilla" data-index="5"></button>
+    <button class="casilla" data-index="6"></button>
+    <button class="casilla" data-index="7"></button>
+    <button class="casilla" data-index="8"></button>
+  </div>
+
+  <div class="info">
+    <div class="resultado" id="resultado"></div>
+    <button class="reiniciar" onclick="reiniciarJuego()">🔄 Reiniciar</button>
+  </div>
+
+  <div class="marcador">
+    <div class="X">X: <span id="puntosX">0</span></div>
+    <div class="O">O: <span id="puntosO">0</span></div>
+    <div>Empates: <span id="puntosE">0</span></div>
+  </div>
+
+<script>
+  let tablero = Array(9).fill('');
+  let jugadorActual = 'X';
+  let juegoActivo = true;
+  let puntos = { X: 0, O: 0, E: 0 };
+
+  const combinacionesGanadoras = [
+    [0,1,2], [3,4,5], [6,7,8], // filas
+    [0,3,6], [1,4,7], [2,5,8], // columnas
+    [0,4,8], [2,4,6]           // diagonales
+  ];
+
+  const casillas = document.querySelectorAll('.casilla');
+  const elementoTurno = document.getElementById('jugador');
+  const elementoResultado = document.getElementById('resultado');
+
+  casillas.forEach(casilla => {
+    casilla.addEventListener('click', () => hacerMovimiento(casilla));
+  });
+
+  function hacerMovimiento(casilla) {
+    const indice = casilla.dataset.index;
+
+    if (tablero[indice] !== '' || !juegoActivo) return;
+
+    tablero[indice] = jugadorActual;
+    casilla.textContent = jugadorActual;
+    casilla.classList.add(jugadorActual);
+    casilla.disabled = true;
+
+    if (verificarGanador()) {
+      juegoActivo = false;
+      elementoResultado.textContent = `¡${jugadorActual} gana! 🎉`;
+      puntos[jugadorActual]++;
+      actualizarMarcador();
+      return;
+    }
+
+    if (!tablero.includes('')) {
+      juegoActivo = false;
+      elementoResultado.textContent = '¡Empate! 🤝';
+      puntos.E++;
+      actualizarMarcador();
+      return;
+    }
+
+    jugadorActual = jugadorActual === 'X' ? 'O' : 'X';
+    elementoTurno.textContent = jugadorActual;
+  }
+
+  function verificarGanador() {
+    for (const combinacion of combinacionesGanadoras) {
+      const [a, b, c] = combinacion;
+      if (tablero[a] && tablero[a] === tablero[b] && tablero[a] === tablero[c]) {
+        combinacion.forEach(i => casillas[i].classList.add('ganadora'));
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function actualizarMarcador() {
+    document.getElementById('puntosX').textContent = puntos.X;
+    document.getElementById('puntosO').textContent = puntos.O;
+    document.getElementById('puntosE').textContent = puntos.E;
+  }
+
+  function reiniciarJuego() {
+    tablero = Array(9).fill('');
+    jugadorActual = 'X';
+    juegoActivo = true;
+    elementoTurno.textContent = 'X';
+    elementoResultado.textContent = '';
+    casillas.forEach(casilla => {
+      casilla.textContent = '';
+      casilla.classList.remove('X', 'O', 'ganadora');
+      casilla.disabled = false;
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gonzalo Boix Llani</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a5c36 0%, #2e7d32 50%, #66bb6a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #ffffff, #c8e6c9);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #0a5c36;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
+        .interests {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .interest-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+        .interest-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .interest-icon {
+            font-size: 2.5rem;
+        }
+
+        .interest-text h2 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .interest-text p {
+            font-size: 0.95rem;
+            opacity: 0.85;
+            line-height: 1.4;
+        }
+
+        footer {
+            margin-top: 30px;
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            .container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="avatar">GB</div>
+        <h1>Gonzalo Boix Llani</h1>
+        <p class="subtitle">Futuro informático &middot; Aprendiendo a programar</p>
+
+        <div class="interests">
+            <div class="interest-card">
+                <div class="interest-icon">⚽</div>
+                <div class="interest-text">
+                    <h2>Real Betis Balompié</h2>
+                    <p>¡Vivo el Betis! Fan del equipo de mis amores. ¡Vamos mi Betis! 💚🤍</p>
+                </div>
+            </div>
+
+            <div class="interest-card">
+                <div class="interest-icon">🛶</div>
+                <div class="interest-text">
+                    <h2>Piragüismo</h2>
+                    <p>Apasionado del piragüismo y de los deportes de agua. Remar siempre hacia delante.</p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            &copy; 2026 Gonzalo Boix Llani · Hecho con HTML y CSS
+        </footer>
+    </div>
+</body>
+</html>
